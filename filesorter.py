@@ -32,16 +32,40 @@ def start_scan():
     directory = filename[:filename.rfind(".")]
     directory_path = os.path.join(application_path, directory)
 
-    # TODO: check if the folder exists already! (if yes, retry with (1) appended or display error message)
-    # os.mkdir(directory_path)
+    # TODO: handle case that directory exists already (just overwrite, append (1) or display error message)
+    if not os.path.exists(directory_path): os.mkdir(directory_path)
     print("Directory '% s' created" % directory)
     
     # open file
-    # get number of entries
+    ending = filename[filename.rfind(".")+1 :]
+    if ending == "xlsx" or ending == "xls":
+        print(application_path)
+        print(filename)
+        filename_path = application_path + "/" + filename
+        spreadsheet = pd.read_excel(filename_path, usecols='A, D')  # A -> "ID" and D -> "bestellt" is hardcoded for now 
+        
+    elif ending == "csv":
+        spreadsheet = pd.read_csv(filename, sep=';')
+
+    print(spreadsheet['ID'].iloc[0])
+    length = len(spreadsheet.index)
+
     # create empty text file
-    # find and link files (new function)
+    directory_path = directory_path + "/" + directory + "_not_found.txt"
+    not_found_list = open(directory_path, 'w')
+    
+    # find and link files 
+    for i in range(0, length):
+        path = application_path + "/" + str(spreadsheet['ID'].iloc[i]) + ".*"
+        if os.path.exists(path):
+            print(i + " exists")
+        else:
+            not_found_list.write(str(spreadsheet['ID'].iloc[i]) + "\n")
+
     # close file
+    not_found_list.close()
     # output textfile if not empty
+
 
 
 application_path = get_application_path()
