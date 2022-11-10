@@ -11,7 +11,6 @@ style.configure('A.TFrame', padding=5, borderwidth=5, relief="ridge")
 content = ttk.Frame(window, padding=5)
 frame_top = ttk.Frame(content, style='A.TFrame')
 frame_bottom = ttk.Frame(content, style='A.TFrame')
-frame_margin = ttk.Frame(content, borderwidth=0)
 
 # Top frame layout
 label_filename = ttk.Label(frame_top, text="No file chosen")
@@ -20,17 +19,26 @@ margin_filename = ttk.Frame(frame_top, borderwidth=0)
 # TODO: either specify the column names or numbers for ID and amount (if needed)
 
 # Bottom frame layout
+button_start = ttk.Button(frame_bottom, text="Start")
+progressbar = ttk.Progressbar(frame_bottom, orient=HORIZONTAL, length=200, mode='determinate')
+logbox = tk.Listbox(frame_bottom, width=44)
+logbox_scrollbar = ttk.Scrollbar(frame_bottom, orient=VERTICAL, command=logbox.yview)
+logbox.configure(yscrollcommand=logbox_scrollbar.set)
 
 
 # Gridding
 content.pack(fill=tk.Y)
 frame_top.grid(row=0, column=0)
-frame_margin.grid(row=1, column=0)
 frame_bottom.grid(row=2, column=0)
 
 label_filename.grid(column=0, row=0, sticky=(E))
 margin_filename.grid(column=1, row=0)
 button_filename.grid(column=2, row=0, sticky=(W))
+
+button_start.grid(row=1, column=1, sticky=(N, W))
+progressbar.grid(row=1, column=2, sticky=(N, W), pady=1)
+logbox.grid(row=2, column=1, columnspan=2, sticky=(N, S, W, E))
+logbox_scrollbar.grid(row=2, column=3, sticky=(N, S))
 
 # Grid configurations
 content.rowconfigure(1, minsize=5)
@@ -39,9 +47,17 @@ frame_top.columnconfigure(0, minsize=195)
 frame_top.columnconfigure(1, minsize=5)
 frame_top.columnconfigure(2, minsize=200)
 
-frame_bottom.rowconfigure(0, minsize=200)
-frame_bottom.columnconfigure(0, minsize=200)
-frame_bottom.columnconfigure(1, minsize=200)
+frame_bottom.rowconfigure(0, minsize=20)
+frame_bottom.rowconfigure(1, minsize=30)
+frame_bottom.rowconfigure(2, minsize=180)
+frame_bottom.rowconfigure(3, minsize=20)
+frame_bottom.columnconfigure(0, minsize=20)
+frame_bottom.columnconfigure(1, minsize=100)
+frame_bottom.columnconfigure(2, minsize=243)
+frame_bottom.columnconfigure(4, minsize=20)
+
+for i in range(1,101):
+    logbox.insert('end', 'Line %d of 100' % i)
 
 window.mainloop()
 
