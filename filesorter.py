@@ -1,5 +1,6 @@
 import os
 import sys
+import pandas as pd
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
@@ -14,15 +15,37 @@ def get_application_path() -> str:
         application_path = os.path.dirname(__file__)
     return application_path
 
-def open_dialog() -> str:
-    application_path = get_application_path()
+def open_dialog():
     filetypes = (('Excel Files', '.xls;.xlsx'), ('CSV Files', '.csv'), ('All Files', '.*'))
-    filename = fd.askopenfilename(title ='Open', initialdir=application_path, filetypes=filetypes)
-    print(filename)
-    return filename
+    filename_path = fd.askopenfilename(title ='Open', initialdir=application_path, filetypes=filetypes)
+    global filename
+    filename = get_filename_from_path(filename_path)
+    label_filename.configure(text=filename)
+    button_start.state(['!disabled'])
+
+def get_filename_from_path(filename_path) -> str:
+    list = filename_path.split("/")
+    return list[-1]
+
+def start_scan():
+    # create output directory
+    directory = filename[:filename.rfind(".")]
+    directory_path = os.path.join(application_path, directory)
+
+    # TODO: check if the folder exists already! (if yes, retry with (1) appended or display error message)
+    # os.mkdir(directory_path)
+    print("Directory '% s' created" % directory)
+    
+    # open file
+    # get number of entries
+    # create empty text file
+    # find and link files (new function)
+    # close file
+    # output textfile if not empty
 
 
-# Building the GUI
+application_path = get_application_path()
+
 window = tk.Tk()
 window.resizable(width=False, height=False)
 style = ttk.Style()
@@ -38,13 +61,12 @@ margin_filename = ttk.Frame(frame_top, borderwidth=0)
 # TODO: either specify the column names or numbers for ID and amount (if needed)
 
 # Bottom frame layout
-button_start = ttk.Button(frame_bottom, text="Start")
+button_start = ttk.Button(frame_bottom, text="Start", command=start_scan)
 button_start.state(['disabled'])
 progressbar = ttk.Progressbar(frame_bottom, orient=HORIZONTAL, length=200, mode='determinate')
 logbox = tk.Listbox(frame_bottom, width=44)
 logbox_scrollbar = ttk.Scrollbar(frame_bottom, orient=VERTICAL, command=logbox.yview)
 logbox.configure(yscrollcommand=logbox_scrollbar.set)
-
 
 # Gridding
 content.pack(fill=tk.Y)
@@ -81,20 +103,7 @@ for i in range(1,101):
 
 window.mainloop()
 
-# First file management tests
-# determine if application is a script file or frozen exe
-if getattr(sys, 'frozen', False):
-    application_path = os.path.dirname(sys.executable)
-elif __file__:
-    application_path = os.path.dirname(__file__)
-print("Application path: "+ application_path)
 
-directory = "Test"
-path = os.path.join(application_path, directory)
-
-# TODO: check if the folder exists already! (if yes, retry with (1) appended or display error message)
-# os.mkdir(path)
-print("Directory '% s' created" % directory)
 
 # src = os.path.join(application_path, "gauntletnew.png")
 # dst = os.path.join(path, "gauntletnew-1.png")
