@@ -3,9 +3,28 @@ import sys
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
+from tkinter import filedialog as fd
+
+
+def get_application_path() -> str:
+    # determine if application is a script file or frozen exe
+    if getattr(sys, 'frozen', False):
+        application_path = os.path.dirname(sys.executable)
+    elif __file__:
+        application_path = os.path.dirname(__file__)
+    return application_path
+
+def open_dialog() -> str:
+    application_path = get_application_path()
+    filetypes = (('Excel Files', '.xls;.xlsx'), ('CSV Files', '.csv'), ('All Files', '.*'))
+    filename = fd.askopenfilename(title ='Open', initialdir=application_path, filetypes=filetypes)
+    print(filename)
+    return filename
+
 
 # Building the GUI
 window = tk.Tk()
+window.resizable(width=False, height=False)
 style = ttk.Style()
 style.configure('A.TFrame', padding=5, borderwidth=5, relief="ridge")
 content = ttk.Frame(window, padding=5)
@@ -14,12 +33,13 @@ frame_bottom = ttk.Frame(content, style='A.TFrame')
 
 # Top frame layout
 label_filename = ttk.Label(frame_top, text="No file chosen")
-button_filename = ttk.Button(frame_top, text="Choose File", width=15)
+button_filename = ttk.Button(frame_top, text="Choose File", width=15, command=open_dialog)
 margin_filename = ttk.Frame(frame_top, borderwidth=0)
 # TODO: either specify the column names or numbers for ID and amount (if needed)
 
 # Bottom frame layout
 button_start = ttk.Button(frame_bottom, text="Start")
+button_start.state(['disabled'])
 progressbar = ttk.Progressbar(frame_bottom, orient=HORIZONTAL, length=200, mode='determinate')
 logbox = tk.Listbox(frame_bottom, width=44)
 logbox_scrollbar = ttk.Scrollbar(frame_bottom, orient=VERTICAL, command=logbox.yview)
