@@ -22,6 +22,8 @@ def open_dialog():
     filename = get_filename_from_path(filename_path)
     label_filename.configure(text=filename)
     button_start.state(['!disabled'])
+    logbox.delete(0, logbox.size())
+    window.update_idletasks()
 
 def get_filename_from_path(filename_path) -> str:
     list = filename_path.split("/")
@@ -34,7 +36,7 @@ def start_scan():
 
     # TODO: handle case that directory exists already (just overwrite, append (1) or display error message)
     if not os.path.exists(directory_path): os.mkdir(directory_path)
-    print("Directory '% s' created" % directory)
+    logbox.insert('end', "Directory % s created" % directory)
     
     # open file
     ending = filename[filename.rfind(".")+1 :]
@@ -49,22 +51,33 @@ def start_scan():
 
     print(spreadsheet['ID'].iloc[0])
     length = len(spreadsheet.index)
+    progressbar.configure(maximum=length)
 
     # create empty text file
-    directory_path = directory_path + "/" + directory + "_not_found.txt"
-    not_found_list = open(directory_path, 'w')
+    textfile_path = directory_path + "/" + directory + "_not_found.txt"
+    textfile = open(textfile_path, 'w')
     
     # find and link files 
     for i in range(0, length):
-        path = application_path + "/" + str(spreadsheet['ID'].iloc[i]) + ".*"
+        current_file = str(spreadsheet['ID'].iloc[i])
+        path = application_path + "/" + current_file + ".*"
         if os.path.exists(path):
-            print(i + " exists")
+            # TODO: link and rename file
+            logbox.insert('end', "File % s copied to % s " %current_file %directory)
         else:
-            not_found_list.write(str(spreadsheet['ID'].iloc[i]) + "\n")
+            textfile.write(current_file + "\n")
+            logbox.insert('end', "Could not find file % s " %current_file)
+        logbox.see(logbox.size())
+        progressbar.step()
+        window.update_idletasks()
 
-    # close file
-    not_found_list.close()
-    # output textfile if not empty
+    # close textfile
+    textfile.close()
+    if os.stat(textfile_path).st_size == 0:
+        os.remove(textfile_path)
+
+    logbox.insert('end', "Scan complete")
+    logbox.see(logbox.size())
 
 
 
@@ -88,9 +101,10 @@ margin_filename = ttk.Frame(frame_top, borderwidth=0)
 button_start = ttk.Button(frame_bottom, text="Start", command=start_scan)
 button_start.state(['disabled'])
 progressbar = ttk.Progressbar(frame_bottom, orient=HORIZONTAL, length=200, mode='determinate')
-logbox = tk.Listbox(frame_bottom, width=44)
+logbox = tk.Listbox(frame_bottom, width=44, activestyle='none')
 logbox_scrollbar = ttk.Scrollbar(frame_bottom, orient=VERTICAL, command=logbox.yview)
 logbox.configure(yscrollcommand=logbox_scrollbar.set)
+logbox_scrollbar.configure(command=logbox.yview)
 
 # Gridding
 content.pack(fill=tk.Y)
@@ -122,15 +136,9 @@ frame_bottom.columnconfigure(1, minsize=100)
 frame_bottom.columnconfigure(2, minsize=243)
 frame_bottom.columnconfigure(4, minsize=20)
 
-for i in range(1,101):
-    logbox.insert('end', 'Line %d of 100' % i)
-
 window.mainloop()
-
 
 
 # src = os.path.join(application_path, "gauntletnew.png")
 # dst = os.path.join(path, "gauntletnew-1.png")
 # os.link(src,dst)
-
-
