@@ -1,5 +1,6 @@
 import os
 import sys
+import glob
 import pandas as pd
 import tkinter as tk
 from tkinter import *
@@ -36,20 +37,17 @@ def start_scan():
 
     # TODO: handle case that directory exists already (just overwrite, append (1) or display error message)
     if not os.path.exists(directory_path): os.mkdir(directory_path)
-    logbox.insert('end', "Directory % s created" % directory)
+    logbox.insert('end', "Directory {0} created".format(directory))
     
     # open file
     ending = filename[filename.rfind(".")+1 :]
     if ending == "xlsx" or ending == "xls":
-        print(application_path)
-        print(filename)
         filename_path = application_path + "/" + filename
         spreadsheet = pd.read_excel(filename_path, usecols='A, D')  # A -> "ID" and D -> "bestellt" is hardcoded for now 
         
     elif ending == "csv":
         spreadsheet = pd.read_csv(filename, sep=';')
 
-    print(spreadsheet['ID'].iloc[0])
     length = len(spreadsheet.index)
     progressbar.configure(maximum=length)
 
@@ -61,12 +59,12 @@ def start_scan():
     for i in range(0, length):
         current_file = str(spreadsheet['ID'].iloc[i])
         path = application_path + "/" + current_file + ".*"
-        if os.path.exists(path):
-            # TODO: link and rename file
-            logbox.insert('end', "File % s copied to % s " %current_file %directory)
+        if glob.glob(path):
+            # TODO: link and rename file(s)
+            logbox.insert('end', "File {0} copied to {1} ".format(current_file, directory))
         else:
             textfile.write(current_file + "\n")
-            logbox.insert('end', "Could not find file % s " %current_file)
+            logbox.insert('end', "Could not find file {0} ".format(current_file))
         logbox.see(logbox.size())
         progressbar.step()
         window.update_idletasks()
