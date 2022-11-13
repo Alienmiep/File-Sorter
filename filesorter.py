@@ -33,6 +33,7 @@ def get_filename_from_path(filename_path) -> str:
     return list[-1]
 
 def start_scan():
+    button_start.state(['disabled'])
     # create output directory
     directory_name = spreadsheet_name[:spreadsheet_name.rfind(".")]
     spreadsheet_directory = spreadsheet_path[: spreadsheet_path.rfind("/")]
@@ -61,8 +62,14 @@ def start_scan():
     for i in range(0, length):
         current_file = str(spreadsheet_data['ID'].iloc[i])
         current_path = spreadsheet_directory + "/" + current_file + ".*"
-        if glob.glob(current_path):
-            # TODO: link and rename file(s)
+        matches = glob.glob(current_path)
+        if matches:
+            for m in matches:
+                new_name = str(spreadsheet_data['bestellt'].iloc[i]) + "_" + get_filename_from_path(m.replace(chr(92), "/"))
+                index = new_name.rfind(".")
+                new_name = new_name[:index] + "_" + directory_name + new_name[index:]
+                dst = directory_path + "/" + new_name
+                os.link(m, dst)
             logbox.insert('end', "File {0} copied to {1} ".format(current_file, directory_name))
         else:
             textfile.write(current_file + "\n")
@@ -77,8 +84,8 @@ def start_scan():
         os.remove(textfile_path)
 
     logbox.insert('end', "Scan complete")
-
     logbox.see(logbox.size())
+    button_start.state(['!disabled'])
 
 
 window = tk.Tk()
@@ -135,8 +142,3 @@ frame_bottom.columnconfigure(2, minsize=243)
 frame_bottom.columnconfigure(4, minsize=20)
 
 window.mainloop()
-
-
-# src = os.path.join(application_path, "gauntletnew.png")
-# dst = os.path.join(path, "gauntletnew-1.png")
-# os.link(src,dst)
