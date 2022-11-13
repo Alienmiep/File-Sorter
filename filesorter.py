@@ -18,10 +18,12 @@ def get_application_path() -> str:
 
 def open_dialog():
     filetypes = (('Excel Files', '.xls;.xlsx'), ('CSV Files', '.csv'), ('All Files', '.*'))
-    filename_path = fd.askopenfilename(title ='Open', initialdir=application_path, filetypes=filetypes)
-    global filename
-    filename = get_filename_from_path(filename_path)
-    label_filename.configure(text=filename)
+    application_path = get_application_path()
+    global spreadsheet_path
+    spreadsheet_path = fd.askopenfilename(title ='Open', initialdir=application_path, filetypes=filetypes)
+    global spreadsheet_name
+    spreadsheet_name = get_filename_from_path(spreadsheet_path)
+    label_filename.configure(text=spreadsheet_name)
     button_start.state(['!disabled'])
     logbox.delete(0, logbox.size())
     window.update_idletasks()
@@ -32,36 +34,36 @@ def get_filename_from_path(filename_path) -> str:
 
 def start_scan():
     # create output directory
-    directory = filename[:filename.rfind(".")]
-    directory_path = os.path.join(application_path, directory)
+    directory_name = spreadsheet_name[:spreadsheet_name.rfind(".")]
+    spreadsheet_directory = spreadsheet_path[: spreadsheet_path.rfind("/")]
+    directory_path = os.path.join(spreadsheet_directory, directory_name)
 
     # TODO: handle case that directory exists already (just overwrite, append (1) or display error message)
     if not os.path.exists(directory_path): os.mkdir(directory_path)
-    logbox.insert('end', "Directory {0} created".format(directory))
+    logbox.insert('end', "Directory {0} created".format(directory_name))
     
     # open file
-    ending = filename[filename.rfind(".")+1 :]
-    if ending == "xlsx" or ending == "xls":
-        filename_path = application_path + "/" + filename
-        spreadsheet = pd.read_excel(filename_path, usecols='A, D')  # A -> "ID" and D -> "bestellt" is hardcoded for now 
+    extension = spreadsheet_name[spreadsheet_name.rfind(".")+1 :]
+    if extension == "xlsx" or extension == "xls":
+        spreadsheet_data = pd.read_excel(spreadsheet_path, usecols='A, D')  # A -> "ID" and D -> "bestellt" is hardcoded for now 
         
-    elif ending == "csv":
-        spreadsheet = pd.read_csv(filename, sep=';')
+    elif extension == "csv":
+        spreadsheet_data = pd.read_csv(spreadsheet_name, sep=';')
 
-    length = len(spreadsheet.index)
+    length = len(spreadsheet_data.index)
     progressbar.configure(maximum=length)
 
     # create empty text file
-    textfile_path = directory_path + "/" + directory + "_not_found.txt"
+    textfile_path = directory_path + "/" + directory_name + "_not_found.txt"
     textfile = open(textfile_path, 'w')
     
     # find and link files 
     for i in range(0, length):
-        current_file = str(spreadsheet['ID'].iloc[i])
-        path = application_path + "/" + current_file + ".*"
-        if glob.glob(path):
+        current_file = str(spreadsheet_data['ID'].iloc[i])
+        current_path = spreadsheet_directory + "/" + current_file + ".*"
+        if glob.glob(current_path):
             # TODO: link and rename file(s)
-            logbox.insert('end', "File {0} copied to {1} ".format(current_file, directory))
+            logbox.insert('end', "File {0} copied to {1} ".format(current_file, directory_name))
         else:
             textfile.write(current_file + "\n")
             logbox.insert('end', "Could not find file {0} ".format(current_file))
@@ -75,11 +77,9 @@ def start_scan():
         os.remove(textfile_path)
 
     logbox.insert('end', "Scan complete")
+
     logbox.see(logbox.size())
 
-
-
-application_path = get_application_path()
 
 window = tk.Tk()
 window.resizable(width=False, height=False)
