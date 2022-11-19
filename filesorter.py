@@ -22,12 +22,13 @@ def open_dialog():
     application_path = get_application_path()
     global spreadsheet_path
     spreadsheet_path = fd.askopenfilename(title ='Open File', initialdir=application_path, filetypes=filetypes)
-    global spreadsheet_name
-    spreadsheet_name = get_filename_from_path(spreadsheet_path)
-    label_filename.configure(text=spreadsheet_name)
-    button_start.state(['!disabled'])
-    logbox.delete(0, logbox.size())
-    window.update_idletasks()
+    if spreadsheet_path != '': 
+        global spreadsheet_name
+        spreadsheet_name = get_filename_from_path(spreadsheet_path)
+        label_filename.configure(text=spreadsheet_name)
+        button_start.state(['!disabled'])
+        logbox.delete(0, logbox.size())
+        window.update_idletasks()
 
 def get_filename_from_path(filename_path) -> str:
     """Extract and return the filename at the end of a path."""
