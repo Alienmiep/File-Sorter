@@ -35,6 +35,14 @@ def get_filename_from_path(filename_path) -> str:
     list = filename_path.split('/')
     return list[-1]
 
+def cleanup(spreadsheet_data) -> pd.DataFrame:
+    """Remove blank lines, replace NaN with 0 and ensure all values are integers."""
+    spreadsheet_data = spreadsheet_data.dropna(axis='rows', subset=['ID'])
+    spreadsheet_data['bestellt'] = spreadsheet_data['bestellt'].fillna(0)
+    spreadsheet_data['ID'] = spreadsheet_data['ID'].astype('int64')  # if the spreadsheet had blank lines, it will detect the columns as float64 instead of int64
+    spreadsheet_data['bestellt'] = spreadsheet_data['bestellt'].astype('int64')
+    return spreadsheet_data
+
 def start_scan():
     """Read filenames from chosen spreadsheet and copy them into a subdirectory.
     
@@ -58,6 +66,7 @@ def start_scan():
         spreadsheet_data = pd.read_excel(spreadsheet_path, usecols='A, D')  # A -> "ID" and D -> "bestellt" is hardcoded for now    
     elif extension == 'csv':
         spreadsheet_data = pd.read_csv(spreadsheet_name, sep=';')
+    spreadsheet_data = cleanup(spreadsheet_data)
     length = len(spreadsheet_data.index)
     progressbar.configure(maximum=length)
 
@@ -76,7 +85,7 @@ def start_scan():
                 index = new_name.rfind('.')
                 new_name = new_name[:index] + '_' + directory_name + new_name[index:]
                 dst = directory_path + '/' + new_name
-                os.link(m, dst)
+                if not os.path.exists(dst): os.link(m, dst)
             logbox.insert('end', 'File {0} copied to {1}'.format(current_file, directory_name))
         else:
             textfile.write(current_file + '\n')
